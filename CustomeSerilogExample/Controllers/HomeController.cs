@@ -18,21 +18,20 @@ namespace CustomeSerilogExample.Controllers
 
         public IActionResult Index()
         {
+            var userId = "12121"; // Example: Get UserId from request header or context
             try
             {
-                var userId = "12121"; // Example: Get UserId from request header or context
-
                 var data = int.Parse(userId);
                 // Use LogContext to enrich the log dynamically
 
-                _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId);
+                _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId, 1, "");
                 return View();
-
             }
 
             catch (Exception ex)
             {
 
+                _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId, 2, ex.Message);
                 return View();
             }
         }
