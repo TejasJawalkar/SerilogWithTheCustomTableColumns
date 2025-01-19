@@ -16,28 +16,35 @@ namespace CustomeSerilogExample.Controllers
             _contextAccessor = contextAccessor;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
-            var userId = "12121"; // Example: Get UserId from request header or context
+            var userId = "invalidUserId"; // Example: Get UserId from request header or context
             try
             {
-                var data = int.Parse(userId);
+                //var data = int.Parse(userId);
                 // Use LogContext to enrich the log dynamically
 
-                _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId, 1, "");
+                _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId, 1, "",
+                  _contextAccessor.HttpContext.Request.Method.ToString());
                 return View();
             }
 
             catch (Exception ex)
             {
 
-                _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId, 2, ex.Message);
+                _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId, 2, ex.Message,
+                    _contextAccessor.HttpContext.Request.Method.ToString());
                 return View();
             }
         }
 
+        [HttpPost]
         public IActionResult Privacy()
         {
+            string userid = "1212";
+            _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userid, 2, "",
+                   _contextAccessor.HttpContext.Request.Method.ToString());
             return View();
         }
 

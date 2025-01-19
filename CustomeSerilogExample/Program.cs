@@ -1,4 +1,5 @@
 using CustomeSerilogExample.DependencyInjection;
+using CustomeSerilogExample.Filters;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,13 +26,20 @@ builder.Host.ConfigureLogging((context, logging) =>
                 {
                     new Serilog.Sinks.MSSqlServer.SqlColumn { ColumnName = "UserId", DataType = System.Data.SqlDbType.NVarChar },
                     new Serilog.Sinks.MSSqlServer.SqlColumn { ColumnName = "ControllerName", DataType = System.Data.SqlDbType.NVarChar},
-                    new Serilog.Sinks.MSSqlServer.SqlColumn { ColumnName = "MethodName", DataType = System.Data.SqlDbType.NVarChar}
+                    new Serilog.Sinks.MSSqlServer.SqlColumn { ColumnName = "MethodName", DataType = System.Data.SqlDbType.NVarChar},
+                    new Serilog.Sinks.MSSqlServer.SqlColumn { ColumnName = "MethodType", DataType = System.Data.SqlDbType.NVarChar},
+                    new Serilog.Sinks.MSSqlServer.SqlColumn { ColumnName = "AccessDateTime", DataType = System.Data.SqlDbType.DateTime },
                 }
             })
         .WriteTo.Console(outputTemplate: "{Message:lj} {Properties}{NewLine}") // Console log output for development
-          .Filter.ByExcluding(e => e.Properties.ContainsKey("SourceContext") &&
-            (e.Properties["SourceContext"].ToString().Contains("Microsoft") || e.Properties["SourceContext"].ToString().Contains("System")))  // Exclude logs from Microsoft and System namespaces
-        .MinimumLevel.Warning()  // Set minimum log level to Warning or higher
+        .Filter.ByExcluding(e => e.Properties.ContainsKey("SourceContext") &&
+            (e.Properties["SourceContext"].ToString().Contains("Microsoft") || e.Properties["SourceContext"].ToString().Contains("System"))) // Exclude logs from Microsoft and System namespaces
+        .Filter.ByExcluding(e => e.Properties.ContainsKey("RequestPath") &&  // Exclude static file requests like CSS, JS
+            (e.Properties["RequestPath"].ToString().Contains(".css") ||
+             e.Properties["RequestPath"].ToString().Contains(".js") ||
+             e.Properties["RequestPath"].ToString().Contains(".jpg") ||
+             e.Properties["RequestPath"].ToString().Contains(".png"))) // Exclude specific static file types
+        .MinimumLevel.Information()  // Set minimum log level to Information
         .CreateLogger());
 });
 
@@ -39,18 +47,18 @@ builder.Host.ConfigureLogging((context, logging) =>
 
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
+builder.Services.AddAuthentication();
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+builder.Services.AddOptions();
+builder.Services.AddControllersWithViews(option =>
+{
+    option.Filters.Add<LoggerFilter>();
+});
 builder.Services.AddOptions();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
-
-app.Use(async (context, next) =>
-{
-    var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("RequestLogger");
-    logger.LogInformation("Request made to {RequestUrl} with method {RequestMethod}", context.Request.Path, context.Request.Method);
-    await next();
-});
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
