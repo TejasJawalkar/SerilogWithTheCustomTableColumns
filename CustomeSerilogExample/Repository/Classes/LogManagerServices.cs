@@ -32,7 +32,6 @@ namespace CustomeSerilogExample.Repository.Classes
             //else
             if (Flag == 2)
             {
-                LogContext.PushProperty("UserId", UserId);
                 LogContext.PushProperty("ControllerName", Controller);
                 LogContext.PushProperty("MethodName", Method);
                 LogContext.PushProperty("MethodType", MethodType);
