@@ -18,48 +18,78 @@ namespace CustomeSerilogExample.Filters
         {
             try
             {
-                var userId = "10";
-                var controllerName = _httpContext.HttpContext?.Request.RouteValues["controller"]?.ToString();
-                var actionName = _httpContext.HttpContext?.Request.RouteValues["action"]?.ToString();
+                // Fetch common information
+                var userId = "10"; // Replace with actual user ID retrieval logic if available
+                var controllerName = GetRouteValue("controller");
+                var actionName = GetRouteValue("action");
                 var methodType = _httpContext.HttpContext?.Request.Method;
-                TimeZoneInfo currentZone = TimeZoneInfo.Local;
-                // Get the current UTC time
-                DateTime utcNow = DateTime.UtcNow;
-                // Convert UTC time to local time
-                DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, currentZone);
+                var namespaceName = this.GetType().Namespace ?? "UnknownNamespace";
+                var localTime = GetLocalTime();
 
-                // Push these properties to Serilog's context
-                LogContext.PushProperty("UserId", userId);
-                LogContext.PushProperty("ControllerName", controllerName);
-                LogContext.PushProperty("MethodName", actionName);
-                LogContext.PushProperty("MethodType", methodType);
-                LogContext.PushProperty("AccessDateTime", localTime);
-
-                // Log the information
-                _logger.LogInformation(
-                    "User {UserId} accessed {ControllerName}/{ActionName} using {MethodType} at {AccessTime}", userId, controllerName, actionName, methodType, localTime);
-
+                // Push properties to Serilog's logging context
+                using (LogContext.PushProperty("UserId", userId))
+                using (LogContext.PushProperty("ControllerName", controllerName))
+                using (LogContext.PushProperty("MethodName", actionName))
+                using (LogContext.PushProperty("MethodType", methodType))
+                using (LogContext.PushProperty("AccessDateTime", localTime))
+                using (LogContext.PushProperty("Namespaces", namespaceName))
+                {
+                    // Log information
+                    _logger.LogInformation(
+                        "User {UserId} accessed {ControllerName}/{ActionName} using {MethodType} at {AccessDateTime}",
+                        userId, controllerName, actionName, methodType, localTime);
+                }
             }
             catch (Exception ex)
             {
-                var controllerName = _httpContext.HttpContext?.Request.RouteValues["controller"]?.ToString();
-                var actionName = _httpContext.HttpContext?.Request.RouteValues["action"]?.ToString();
-                var methodType = _httpContext.HttpContext?.Request.Method;
-                TimeZoneInfo currentZone = TimeZoneInfo.Local;
-                DateTime utcNow = DateTime.UtcNow;
-                DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, currentZone);
-
-                LogContext.PushProperty("ControllerName", controllerName);
-                LogContext.PushProperty("ActionName", actionName);
-                LogContext.PushProperty("MethodType", methodType);
-                LogContext.PushProperty("AccessDateTime", localTime);
-                _logger.LogError(ex.Message, "Error in {ControllerName}/{ActionName} using {MethodType} at {AccessTime}");
+                LogException(ex);
             }
         }
 
         public void OnActionExecuting(ActionExecutingContext context)
         {
+            // Logic for pre-action execution logging (optional)
+        }
 
+        private string? GetRouteValue(string key)
+        {
+            return _httpContext.HttpContext?.Request.RouteValues[key]?.ToString();
+        }
+
+        private DateTime GetLocalTime()
+        {
+            var currentZone = TimeZoneInfo.Local;
+            var utcNow = DateTime.UtcNow;
+            return TimeZoneInfo.ConvertTimeFromUtc(utcNow, currentZone);
+        }
+
+        private void LogException(Exception ex)
+        {
+            try
+            {
+                var controllerName = GetRouteValue("controller");
+                var actionName = GetRouteValue("action");
+                var methodType = _httpContext.HttpContext?.Request.Method;
+                var namespaceName = this.GetType().Namespace ?? "UnknownNamespace";
+                var localTime = GetLocalTime();
+
+                using (LogContext.PushProperty("ControllerName", controllerName))
+                using (LogContext.PushProperty("ActionName", actionName))
+                using (LogContext.PushProperty("MethodType", methodType))
+                using (LogContext.PushProperty("AccessDateTime", localTime))
+                using (LogContext.PushProperty("Namespaces", namespaceName))
+                {
+                    _logger.LogError(
+                        ex,
+                        "An error occurred in {ControllerName}/{ActionName} using {MethodType} at {AccessDateTime}",
+                        controllerName, actionName, methodType, localTime);
+                }
+            }
+            catch
+            {
+                // Fallback in case logging itself fails
+                _logger.LogError("An exception occurred while logging an exception: {ExceptionMessage}", ex.Message);
+            }
         }
     }
 }

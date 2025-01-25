@@ -22,11 +22,12 @@ namespace CustomeSerilogExample.Controllers
             var userId = "invalidUserId"; // Example: Get UserId from request header or context
             try
             {
-                var data = int.Parse(userId);
+                //Forcely Created the Error 
+                //var data = int.Parse(userId);
                 // Use LogContext to enrich the log dynamically
 
-                _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId, 1, "",
-                  _contextAccessor.HttpContext.Request.Method.ToString());
+                _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId, 1, "User Logged In",
+                  _contextAccessor.HttpContext.Request.Method.ToString(), this.GetType().Namespace.ToString());
                 return View();
             }
 
@@ -34,7 +35,7 @@ namespace CustomeSerilogExample.Controllers
             {
 
                 _logServices.LogManager(_contextAccessor.HttpContext?.Request?.RouteValues["Controller"]?.ToString(), _contextAccessor.HttpContext?.Request?.RouteValues["action"]?.ToString(), userId, 2, ex.Message,
-                    _contextAccessor.HttpContext.Request.Method.ToString());
+                    _contextAccessor.HttpContext.Request.Method.ToString(), this.GetType().Namespace.ToString());
                 return View();
             }
         }

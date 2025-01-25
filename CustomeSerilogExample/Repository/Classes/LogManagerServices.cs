@@ -5,39 +5,64 @@ namespace CustomeSerilogExample.Repository.Classes
 {
     public class LogManagerServices : ILogServices
     {
-        private readonly ILogger<LogManagerServices> _services;
+        private readonly ILogger<LogManagerServices> _logger;
 
-        public LogManagerServices(ILogger<LogManagerServices> services)
+        public LogManagerServices(ILogger<LogManagerServices> logger)
         {
-            _services = services;
+            _logger = logger;
         }
-        public async Task LogManager(string Controller, string Method, string UserId, Int32 Flag, String Exception, String MethodType)
+
+        public async Task LogManager(string controller, string method, string userId, int flag, string exception, string methodType, string Namespaces)
         {
-            TimeZoneInfo currentZone = TimeZoneInfo.Local;
-            // Get the current UTC time
-            DateTime utcNow = DateTime.UtcNow;
-            // Convert UTC time to local time
-            DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, currentZone);
-
-            //if (Flag == 1)
-            //{
-            //    LogContext.PushProperty("UserId", UserId);
-            //    LogContext.PushProperty("ControllerName", Controller);
-            //    LogContext.PushProperty("MethodName", Controller);
-            //    LogContext.PushProperty("MethodType", MethodType);
-
-
-            //    _services.LogWarning("Request made to {ControllerName}/{MethodName} by the {UserId} at {localTime}", Controller, Method, UserId, localTime);
-            //}
-            //else
-            if (Flag == 2)
+            try
             {
-                LogContext.PushProperty("ControllerName", Controller);
-                LogContext.PushProperty("MethodName", Method);
-                LogContext.PushProperty("MethodType", MethodType);
-                LogContext.PushProperty("AccessDateTime", localTime);
-                _services.LogError(Exception, "Error Found on {ControllerName}/{MethodName}", Controller, Method);
+                var localTime = GetLocalTime();
+
+                // Push common properties to Serilog context
+                using (LogContext.PushProperty("UserId", userId))
+                using (LogContext.PushProperty("ControllerName", controller))
+                using (LogContext.PushProperty("MethodName", method))
+                using (LogContext.PushProperty("MethodType", methodType))
+                using (LogContext.PushProperty("AccessDateTime", localTime))
+                using (LogContext.PushProperty("Namespaces", Namespaces))
+                {
+                    if (flag == 1)
+                    {
+                        _logger.LogWarning("{UserId} logged in at {AccessDateTime}", userId, localTime);
+                    }
+                    else if (flag == 2)
+                    {
+                        // Log all error details with contextual information
+                        _logger.LogError(
+                            "{Exception}. Details: NameSpace= {Namespaces}  Controller={ControllerName}, Method={MethodName}, UserId={UserId}, MethodType={MethodType}, AccessDateTime={AccessDateTime}",
+                           Namespaces, exception, controller, method, userId, methodType, localTime
+                        );
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Unrecognized flag: {Flag}. Controller: {ControllerName}, Method: {MethodName}", flag, controller, method);
+                    }
+                }
             }
+            catch (Exception ex)
+            {
+                // Log any issues during logging and include controller/method details
+                _logger.LogError(
+                    ex,
+                    "An error occurred in LogManager for Controller={ControllerName}, Method={MethodName}. Additional details: UserId={UserId}, MethodType={MethodType}, AccessDateTime={AccessDateTime}",
+                    controller, method, userId, methodType, GetLocalTime()
+                );
+            }
+
+            // Simulate async work
+            await Task.CompletedTask;
+        }
+
+        private DateTime GetLocalTime()
+        {
+            var currentZone = TimeZoneInfo.Local;
+            var utcNow = DateTime.UtcNow;
+            return TimeZoneInfo.ConvertTimeFromUtc(utcNow, currentZone);
         }
     }
 }

@@ -12,7 +12,8 @@
         /// <param name="Flag"></param>
         /// <param name="Exception"></param>
         /// <param name="MethodType">Used to store the http method type like Get/Post/Put/Delete</param>
+        /// <param name="Namespaces"></param>
         /// <returns></returns>
-        public Task LogManager(string Controller, string Method, String UserId, Int32 Flag, String Exception, String MethodType);
+        public Task LogManager(string Controller, string Method, String UserId, Int32 Flag, String Exception, String MethodType, string Namespaces);
     }
 }
