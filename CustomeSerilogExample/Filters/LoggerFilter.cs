@@ -24,20 +24,20 @@ namespace CustomeSerilogExample.Filters
                 var actionName = GetRouteValue("action");
                 var methodType = _httpContext.HttpContext?.Request.Method;
                 var namespaceName = this.GetType().Namespace ?? "UnknownNamespace";
-                var localTime = GetLocalTime();
+                var UTCTime = GetLocalTime();
 
                 // Push properties to Serilog's logging context
                 using (LogContext.PushProperty("UserId", userId))
                 using (LogContext.PushProperty("ControllerName", controllerName))
                 using (LogContext.PushProperty("MethodName", actionName))
                 using (LogContext.PushProperty("MethodType", methodType))
-                using (LogContext.PushProperty("AccessDateTime", localTime))
+                using (LogContext.PushProperty("UTCTime", UTCTime))
                 using (LogContext.PushProperty("Namespaces", namespaceName))
                 {
                     // Log information
                     _logger.LogInformation(
-                        "User {UserId} accessed {ControllerName}/{ActionName} using {MethodType} at {AccessDateTime}",
-                        userId, controllerName, actionName, methodType, localTime);
+                        "User {UserId} accessed {Namespaces}/{ControllerName}/{ActionName} using {MethodType} at {UTCTime}",
+                        userId, namespaceName, controllerName, actionName, methodType, UTCTime);
                 }
             }
             catch (Exception ex)
@@ -71,18 +71,18 @@ namespace CustomeSerilogExample.Filters
                 var actionName = GetRouteValue("action");
                 var methodType = _httpContext.HttpContext?.Request.Method;
                 var namespaceName = this.GetType().Namespace ?? "UnknownNamespace";
-                var localTime = GetLocalTime();
+                var UTCTime = GetLocalTime();
 
                 using (LogContext.PushProperty("ControllerName", controllerName))
                 using (LogContext.PushProperty("ActionName", actionName))
                 using (LogContext.PushProperty("MethodType", methodType))
-                using (LogContext.PushProperty("AccessDateTime", localTime))
+                using (LogContext.PushProperty("UTCTime", UTCTime))
                 using (LogContext.PushProperty("Namespaces", namespaceName))
                 {
                     _logger.LogError(
                         ex,
-                        "An error occurred in {ControllerName}/{ActionName} using {MethodType} at {AccessDateTime}",
-                        controllerName, actionName, methodType, localTime);
+                        "An error occurred in {Namespaces}/{ControllerName}/{ActionName} using {MethodType} at {UTCTime}",
+                        namespaceName, controllerName, actionName, methodType, UTCTime);
                 }
             }
             catch

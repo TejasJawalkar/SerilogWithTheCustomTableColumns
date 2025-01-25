@@ -23,18 +23,18 @@ namespace CustomeSerilogExample.Repository.Classes
                 using (LogContext.PushProperty("ControllerName", controller))
                 using (LogContext.PushProperty("MethodName", method))
                 using (LogContext.PushProperty("MethodType", methodType))
-                using (LogContext.PushProperty("AccessDateTime", localTime))
+                using (LogContext.PushProperty("UTCTime", localTime))
                 using (LogContext.PushProperty("Namespaces", Namespaces))
                 {
                     if (flag == 1)
                     {
-                        _logger.LogWarning("{UserId} logged in at {AccessDateTime}", userId, localTime);
+                        _logger.LogWarning("{UserId} logged in at {UTCTime}", userId, localTime);
                     }
                     else if (flag == 2)
                     {
                         // Log all error details with contextual information
                         _logger.LogError(
-                            "{Exception}. Details: NameSpace= {Namespaces}  Controller={ControllerName}, Method={MethodName}, UserId={UserId}, MethodType={MethodType}, AccessDateTime={AccessDateTime}",
+                            "{Exception}. Details: NameSpace= {Namespaces}  Controller={ControllerName}, Method={MethodName}, UserId={UserId}, MethodType={MethodType}, UTCTime={UTCTime}",
                            Namespaces, exception, controller, method, userId, methodType, localTime
                         );
                     }
@@ -49,7 +49,7 @@ namespace CustomeSerilogExample.Repository.Classes
                 // Log any issues during logging and include controller/method details
                 _logger.LogError(
                     ex,
-                    "An error occurred in LogManager for Controller={ControllerName}, Method={MethodName}. Additional details: UserId={UserId}, MethodType={MethodType}, AccessDateTime={AccessDateTime}",
+                    "An error occurred in LogManager for Controller={ControllerName}, Method={MethodName}. Additional details: UserId={UserId}, MethodType={MethodType}, UTCTime={UTCTime}",
                     controller, method, userId, methodType, GetLocalTime()
                 );
             }

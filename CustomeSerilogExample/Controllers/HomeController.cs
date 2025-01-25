@@ -44,7 +44,7 @@ namespace CustomeSerilogExample.Controllers
         public IActionResult Privacy()
         {
 
-            return View();
+            return Json(null);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
