@@ -42,6 +42,7 @@ namespace CustomeSerilogExample.Filters
             }
             catch (Exception ex)
             {
+                //This will Store the Error in DataBase
                 LogException(ex);
             }
         }
