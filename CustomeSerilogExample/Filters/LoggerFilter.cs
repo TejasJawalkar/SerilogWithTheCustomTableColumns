@@ -74,6 +74,7 @@ namespace CustomeSerilogExample.Filters
                 var namespaceName = this.GetType().Namespace ?? "UnknownNamespace";
                 var UTCTime = GetLocalTime();
 
+                //This Will Push New Properties 
                 using (LogContext.PushProperty("ControllerName", controllerName))
                 using (LogContext.PushProperty("ActionName", actionName))
                 using (LogContext.PushProperty("MethodType", methodType))
